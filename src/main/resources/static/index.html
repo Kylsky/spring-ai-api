@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 智能助手</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- 引入Vue和Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@3.2.33/dist/vue.global.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- 引入Marked.js用于Markdown渲染 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- 引入DOMPurify用于安全处理HTML -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.5/dist/purify.min.js"></script>
+</head>
+<body>
+    <div id="app" class="container">
+        <!-- 使用组件 -->
+        <chat-header
+            v-model:model="model">
+        </chat-header>
+        
+        <chat-body 
+            :chat-history="chatHistory"
+            :is-typing="isTyping">
+        </chat-body>
+        
+        <chat-controls
+            v-model:user-message="userMessage"
+            :loading="loading"
+            :status-message="statusMessage"
+            :is-error="isError"
+            @send-request="sendRequest">
+        </chat-controls>
+    </div>
+    
+    <!-- 先加载主应用 -->
+    <script src="js/app.js"></script>
+    
+    <!-- 然后加载组件 -->
+    <script src="components/ChatHeader.js"></script>
+    <script src="components/ChatBody.js"></script>
+    <script src="components/ChatControls.js"></script>
+</body>
+</html> 
