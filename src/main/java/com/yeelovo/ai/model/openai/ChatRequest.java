@@ -20,26 +20,15 @@ public class ChatRequest {
     private Boolean stream;
     private Integer n;
     private Map<String, Object> options;
-    
-    public Boolean getStream() {
-        return stream;
-    }
-    
-    public void setStream(Boolean stream) {
-        this.stream = stream;
-    }
-    
+    private String query;
+
     public String getModel() {
         if (model == null) {
             return "gpt-4o";
         }
         return model;
     }
-    
-    public List<Message> getMessages() {
-        return messages;
-    }
-    
+
     @Data
     @Builder
     @NoArgsConstructor
