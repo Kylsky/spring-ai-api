@@ -13,13 +13,15 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.tool.ToolCallbackProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
-
-import jakarta.annotation.PreDestroy;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,7 +35,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @RequiredArgsConstructor
 @Slf4j
 public class OpenAiCompatibleServiceImpl implements OpenAiCompatibleService {
-
     @Qualifier("openAiChatClient")
     private final ChatClient openaiChatClient;
 
@@ -53,10 +54,16 @@ public class OpenAiCompatibleServiceImpl implements OpenAiCompatibleService {
     @Override
     public ChatResponse chat(ChatRequest request) {
         try {
-            Prompt prompt = createPrompt(request);
+            List<Message> messages = createMessages(request);
 
             // 阻塞式调用
-            String content = openaiChatClient.prompt(prompt).user(request.getQuery()).call().content();
+            String content = openaiChatClient
+                                     .prompt()
+                                     .messages(messages)
+                                     //.user(request.getQuery())
+                                     .options(OpenAiChatOptions.builder().model(request.getModel()).build())
+                                     .call()
+                                     .content();
 
             return createChatResponse(content, request.getModel());
         } catch (Exception e) {
@@ -84,12 +91,14 @@ public class OpenAiCompatibleServiceImpl implements OpenAiCompatibleService {
         // 使用注入的线程池处理请求，而不是自己创建
         streamTaskExecutor.execute(() -> {
             try {
-                Prompt prompt = createPrompt(request);
+                List<Message> messages = createMessages(request);
 
                 // 流式调用
                 // 使用Reactor的调度器管理线程
-                Flux<String> contentFlux = openaiChatClient.prompt(prompt)
-                                                   .user(request.getQuery())
+                Flux<String> contentFlux = openaiChatClient.prompt()
+                                                   .messages(messages)
+                                                   //.user(request.getQuery())
+                                                   .options(OpenAiChatOptions.builder().model(request.getModel()).build())
                                                    .stream()
                                                    .content()
                                                    .publishOn(Schedulers.boundedElastic()); // 使用有边界的弹性线程池
@@ -171,7 +180,7 @@ public class OpenAiCompatibleServiceImpl implements OpenAiCompatibleService {
         activeConnections.decrementAndGet();
     }
 
-    private Prompt createPrompt(ChatRequest request) {
+    private List<Message> createMessages(ChatRequest request) {
         List<Message> messages = new ArrayList<>();
 
         for (ChatRequest.Message msg : request.getMessages()) {
@@ -182,10 +191,11 @@ public class OpenAiCompatibleServiceImpl implements OpenAiCompatibleService {
                 default -> log.warn("未知角色类型: {}", msg.getRole());
             }
         }
-        ChatOptions chatOptions = ChatOptions.builder().model(request.getModel()).build();
 
-        return new Prompt(messages, chatOptions);
+        return messages;
     }
+
+
 
     private ChatResponse createChatResponse(String content, String model) {
         ChatResponse.Message message = ChatResponse.Message.builder()
