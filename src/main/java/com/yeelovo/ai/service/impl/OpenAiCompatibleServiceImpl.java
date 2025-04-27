@@ -33,9 +33,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class OpenAiCompatibleServiceImpl implements OpenAiCompatibleService {
 
-    @Qualifier("openaiChatClient")
+    @Qualifier("openAiChatClient")
     private final ChatClient openaiChatClient;
-    
+
     // 注入配置的线程池，而不是在服务中创建
     @Qualifier("streamTaskExecutor")
     private final Executor streamTaskExecutor;

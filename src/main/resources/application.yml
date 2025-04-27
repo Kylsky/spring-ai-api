@@ -3,16 +3,40 @@ spring:
     name: ai-demo
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:ai}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${MYSQL_HOST:mysh.yeelo.fun}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:pandora}?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: ${MYSQL_USERNAME:root}
-    password: ${MYSQL_PASSWORD:root}
+    password: ${MYSQL_PASSWORD:Skyline302}
   ai:
     openai:
-      base-url: https://xxx.xxx.xxx
+      base-url: https://api.yeelo.fun
       api-key: sk-xxxxxx
       chat:
         options:
           model: gpt-4o
     anthropic:
-      base-url: https://xxx.xxx.xxx
+      base-url: https://api.yeelo.fun
       api-key: sk-xxxxxx
+
+    mcp:
+      client:
+        enabled: true
+        toolcallback:
+          enabled: true
+        name: my-mcp-client
+        version: 1.0.0
+        request-timeout: 30s
+        type:  sync  # or ASYNC for reactive applications
+        stdio:
+          connections:
+            gaode:
+              command: npx
+              args:
+                - "-y"
+                - "@amap/amap-maps-mcp-server"
+              env:
+                AMAP_MAPS_API_KEY: xxxxxx
+      server:
+        name: spring-ai-webmvc-mcp-server
+        version: 1.0.0
+        type: async
+        sse-message-endpoint: /mcp/message
